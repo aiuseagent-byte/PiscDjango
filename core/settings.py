@@ -142,7 +142,7 @@ MEDIA_ROOT = BASE_DIR / "media"
 MEDIA_URL = '/media/'
 
 
-STORAGES = {
+STATICFILES_STORAGE = {
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
