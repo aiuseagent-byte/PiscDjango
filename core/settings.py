@@ -143,11 +143,15 @@ MEDIA_URL = '/media/'
 
 
 # Especifica qual servidor vai servir os arquivos staticos
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
-
-
-from django.conf import STATICFILES_STORAGE_ALIAS
 from django.contrib.messages import constants
 
 MESSAGE_TAGS = {
