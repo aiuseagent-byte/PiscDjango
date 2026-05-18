@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+{% load static %}
+{% load consultas_filters %}
+
+{% block 'body' %}
+    <div class="relative isolate min-h-screen bg-slate-50/30 overflow-hidden">
+        <svg aria-hidden="true" class="absolute inset-0 -z-10 size-full mask-[radial-gradient(100%_100%_at_top_right,white,transparent)] stroke-gray-200/80">
+            <defs>
+                <pattern id="grid-pattern-gravacao" width="200" height="200" x="50%" y="-1" patternUnits="userSpaceOnUse">
+                    <path d="M.5 200V.5H200" fill="none" />
+                </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#grid-pattern-gravacao)" stroke-width="0" />
+        </svg>
+
+        <header class="flex h-16 border-b border-gray-100 bg-white/80 backdrop-blur-md sticky top-0 z-50">
+            <div class="mx-auto flex w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+                <div class="flex flex-1 items-center gap-x-6">
+                    <img src="{% static 'logo.png' %}" alt="PsiQuê" class="h-10 w-auto" />
+                </div>
+                <nav class="hidden md:flex md:gap-x-8 md:text-sm md:font-bold md:text-gray-600">
+                    <a href="{% url 'consultas' gravacao.paciente.id %}" class="hover:text-cyan-600 transition-colors pb-5 pt-5">Consultas</a>
+                    <a href="{% url 'pacientes' %}" class="hover:text-cyan-600 transition-colors pb-5 pt-5">Usuários</a>
+                </nav>
+                <div class="flex flex-1 items-center justify-end gap-x-4">
+                    <button class="text-sm font-semibold text-gray-700 hover:text-gray-900 transition-colors">Seu perfil</button>
+                    <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" 
+                         alt="" class="size-8 rounded-full ring-2 ring-gray-100" />
+                </div>
+            </div>
+        </header>
+
+        <main class="pb-16">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-4">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    
+                    <div class="flex items-center gap-4">
+                        <a href="{% url 'consultas' gravacao.paciente.id %}" class="group p-2.5 rounded-lg bg-white border border-gray-200 text-gray-500 hover:text-cyan-600 hover:border-cyan-200 transition-all shadow-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="size-5 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </a>
+                        <img class="size-12 rounded-lg object-cover ring-2 ring-cyan-50 shadow-sm" src="{{ gravacao.paciente.foto.url }}" alt="Foto do Paciente">
+                        <div>
+                            <h1 class="text-xl font-extrabold text-gray-900">Análise de Gravação</h1>
+                            <p class="text-sm font-medium text-gray-500 flex items-center gap-1.5">
+                                Paciente 
+                                <span class="size-1.5 rounded-full bg-gray-300"></span> 
+                                <span class="font-bold text-gray-700">Acesso via Plataforma</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center">
+                        <a href="#" class="inline-flex items-center gap-x-2 rounded-lg bg-red-50 px-4 py-2 text-sm font-bold text-red-600 hover:bg-red-100 transition-colors border border-red-100">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            Excluir Registro
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                <dl class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    
+                    <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm relative overflow-hidden group hover:border-cyan-200 transition-colors">
+                        <dt class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Transcrição</dt>
+                        <dd class="flex items-baseline gap-2">
+                            <span class="text-3xl font-extrabold text-gray-900">{{gravacao.transcricao|count_words}}</span>
+                            <span class="text-sm font-semibold text-gray-400">palavras</span>
+                        </dd>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm relative overflow-hidden group hover:border-indigo-200 transition-colors">
+                        <dt class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Tarefas Extraídas</dt>
+                        <dd class="flex items-baseline gap-2">
+                            <span class="text-3xl font-extrabold text-gray-900">{{gravacao.resumo|length}}</span>
+                            <span class="text-sm font-semibold text-gray-400">identificadas</span>
+                        </dd>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm relative overflow-hidden group hover:border-emerald-200 transition-colors">
+                        <dt class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Humor Médio</dt>
+                        <dd class="flex items-baseline gap-2">
+                            <span class="text-3xl font-extrabold text-gray-900">{{gravacao.humor}}</span>
+                            <span class="text-sm font-semibold text-gray-400">de 5</span>
+                        </dd>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm relative overflow-hidden group hover:border-amber-200 transition-colors">
+                        <dt class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Humor da Sessão</dt>
+                        <dd class="flex items-baseline gap-2">
+                            <span class="text-3xl font-extrabold text-gray-900">{{gravacao.humor}}</span>
+                            <span class="text-sm font-semibold text-gray-400">de 5</span>
+                        </dd>
+                    </div>
+                </dl>
+            </div>
+
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+                <div class="lg:grid lg:grid-cols-12 lg:gap-8 items-start">
+                    
+                    <div class="lg:col-span-8 space-y-6">
+                        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col h-full">
+                            
+                            <div class="border-b border-gray-100 px-6 py-4 flex items-center justify-between bg-gray-50/50">
+                                <div class="flex items-center gap-3">
+                                    <div class="p-2 bg-cyan-50 rounded-lg text-cyan-600 border border-cyan-100">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                    </div>
+                                    <h2 class="text-base font-bold text-gray-900">Transcrição Integral</h2>
+                                </div>
+                                <span class="bg-white px-3 py-1 rounded-full text-xs font-bold text-gray-500 border border-gray-200 shadow-sm">AI Generated</span>
+                            </div>
+                            
+                            <div class="p-6 md:p-8 bg-white flex-1 overflow-auto max-h-[600px] custom-scrollbar">
+                                <div class="prose prose-sm sm:prose-base max-w-none text-gray-700 leading-relaxed font-medium">
+                                    {{ gravacao.transcricao }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-4 mt-8 lg:mt-0 space-y-6 sticky top-24">
+                        
+                        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                            <div class="border-b border-gray-100 px-5 py-4 flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="p-2 bg-indigo-50 rounded-lg text-indigo-600 border border-indigo-100">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                        </svg>
+                                    </div>
+                                    <h2 class="text-base font-bold text-gray-900">Resumo de Tarefas</h2>
+                                </div>
+                            </div>
+                            
+                            <div class="p-2">
+                                <ul class="divide-y divide-gray-50">
+                                    {% for tarefa in gravacao.resumo %}
+                                        <li class="p-3 hover:bg-gray-50 transition-colors rounded-lg group">
+                                            <div class="flex items-start gap-3">
+                                                <div class="mt-1 flex-none rounded-full bg-indigo-100 p-1 text-indigo-600">
+                                                    <div class="size-2 rounded-full bg-current"></div>
+                                                </div>
+                                                <div class="flex-1">
+                                                    <p class="text-sm font-semibold text-gray-700 group-hover:text-gray-900 leading-snug">
+                                                        {{tarefa}}
+                                                    </p>
+                                                </div>
+                                                <span class="inline-flex items-center rounded-full bg-indigo-50 px-2 py-1 text-[10px] font-bold text-indigo-700 ring-1 ring-inset ring-indigo-700/10 whitespace-nowrap">
+                                                    Extraído
+                                                </span>
+                                            </div>
+                                        </li>
+                                    {% empty %}
+                                        <div class="text-center py-8">
+                                            <p class="text-sm font-medium text-gray-400">Nenhuma tarefa extraída da gravação.</p>
+                                        </div>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            
+                            <div class="p-5 bg-gray-50 border-t border-gray-100">
+                                <a href="{% url 'send_message' gravacao.id %}" class="flex w-full justify-center items-center gap-2 rounded-lg bg-cyan-600 px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-cyan-600/20 hover:bg-cyan-700 transition-all active:scale-[0.98]">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                                    </svg>
+                                    Enviar Resumo para Paciente
+                                </a>
+                                <p class="text-[10px] text-center font-medium text-gray-400 mt-3">Uma cópia será processada e enviada via canal seguro.</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+{% endblock 'body' %}

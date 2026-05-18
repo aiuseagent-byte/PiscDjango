@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block 'body' %}
+<div class="relative flex flex-col h-[calc(100vh-64px)] bg-white overflow-hidden">
+    <svg aria-hidden="true" class="absolute inset-0 -z-10 size-full mask-[radial-gradient(100%_100%_at_top_right,white,transparent)] stroke-gray-200">
+        <defs>
+            <pattern id="grid-pattern-chat" width="200" height="200" x="50%" y="-1" patternUnits="userSpaceOnUse">
+                <path d="M.5 200V.5H200" fill="none" />
+            </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#grid-pattern-chat)" stroke-width="0" />
+    </svg>
+
+    <header class="flex-none border-b border-gray-100 bg-white/80 backdrop-blur-md z-10">
+        <div class="mx-auto max-w-5xl px-4 py-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-x-4">
+                    <a href="{% url 'consultas' paciente.id %}" class="transition-transform hover:scale-105">
+                        <img src="{{ paciente.foto.url }}" alt="{{ paciente.nome }}" class="size-10 rounded-lg object-cover ring-2 ring-cyan-50">
+                    </a>
+                    <div>
+                        <h1 class="text-sm font-extrabold text-gray-900">{{ paciente.nome }}</h1>
+                        <div class="flex items-center gap-1.5">
+                            <span class="size-2 rounded-full bg-green-500 animate-pulse"></span>
+                            <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Assistente Ativa</span>
+                        </div>
+                    </div>
+                </div>
+                <a href="{% url 'consultas' paciente.id %}" class="text-xs font-bold text-cyan-600 hover:text-cyan-700">Voltar para Prontuário</a>
+            </div>
+        </div>
+    </header>
+
+    <main id="chat-container" class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 scroll-smooth custom-scrollbar">
+        <div class="max-w-4xl mx-auto flex flex-col gap-6" id="chat-messages">
+            
+            
+
+        </div>
+    </main>
+
+    <footer class="flex-none p-4 bg-white/80 backdrop-blur-md border-t border-gray-100">
+        <div class="max-w-4xl mx-auto">
+            <form id="form-pergunta" class="relative">
+                <div class="relative flex items-end gap-2 bg-gray-50 border border-gray-200 rounded-2xl p-2 transition-all focus-within:border-cyan-500 focus-within:ring-1 focus-within:ring-cyan-500 shadow-sm">
+                    <textarea 
+                        id="pergunta"
+                        rows="1"
+                        placeholder="Digite sua pergunta sobre o paciente..."
+                        class="block w-full outline-none ring-0 resize-none border-0 bg-transparent py-2.5 px-3 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6 custom-scrollbar"
+                    ></textarea>
+                    
+                    <button type="submit" id="btn-enviar" class="inline-flex items-center justify-center size-10 rounded-xl bg-cyan-600 text-white shadow-lg shadow-cyan-600/20 hover:bg-cyan-700 transition-all active:scale-95 disabled:opacity-50 disabled:grayscale">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-5">
+                            <path d="M3.478 2.404a.75.75 0 0 0-.926.941l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.404Z" />
+                        </svg>
+                    </button>
+                </div>
+                <p class="mt-2 text-[10px] text-center text-gray-400">A IA pode cometer erros. Considere revisar informações importantes.</p>
+            </form>
+        </div>
+    </footer>
+</div>
+
+<style>
+    /* Scrollbar Moderna */
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+    
+    /* Animação de digitação */
+    .typing-dot { animation: typing 1.4s infinite; }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes typing { 0%, 100% { opacity: 0.2; transform: translateY(0); } 50% { opacity: 1; transform: translateY(-2px); } }
+</style>
+
+<script>
+    const chatMessages = document.getElementById('chat-messages');
+    const chatContainer = document.getElementById('chat-container');
+    const formPergunta = document.getElementById('form-pergunta');
+    const inputPergunta = document.getElementById('pergunta');
+    const btnEnviar = document.getElementById('btn-enviar');
+
+    // --- Utilitários ---
+
+    const scrollToBottom = () => {
+        chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior: 'smooth' });
+    };
+
+    const getCurrentTime = () => {
+        return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    };
+
+    // Auto-resize do textarea
+    inputPergunta.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
+    });
+
+    // Envio com Enter (e Shift+Enter para quebra de linha)
+    inputPergunta.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            formPergunta.requestSubmit();
+        }
+    });
+
+    // --- Geradores de Componentes (DOM) ---
+
+    function createUserMessage(text) {
+        const div = document.createElement('div');
+        div.className = "flex items-start justify-end gap-3 animate-in fade-in slide-in-from-right-4 duration-300";
+        div.innerHTML = `
+            <div class="flex flex-col gap-1 items-end max-w-[80%] sm:max-w-[70%]">
+                <div class="flex items-center gap-2">
+                    <span class="text-[10px] text-gray-400">${getCurrentTime()}</span>
+                    <span class="text-xs font-bold text-gray-900">Você</span>
+                </div>
+                <div class="bg-cyan-600 text-white rounded-2xl rounded-tr-none p-4 shadow-md shadow-cyan-600/10">
+                    <p class="text-sm leading-relaxed">${text}</p>
+                </div>
+            </div>
+        `;
+        return div;
+    }
+
+    function createAIMessage(id) {
+        const div = document.createElement('div');
+        div.className = "flex items-start gap-3 animate-in fade-in duration-500";
+        div.innerHTML = `
+            <img class="size-10 rounded-full shadow-sm" src="{% static 'assistente_virtual.png' %}" alt="PsiQuete">
+            <div class="flex flex-col gap-1 max-w-[80%] sm:max-w-[70%]">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-bold text-gray-900">PsiQuete</span>
+                    <span class="text-[10px] text-gray-400">${getCurrentTime()}</span>
+                </div>
+                <div class="bg-gray-100 text-gray-800 rounded-2xl rounded-tl-none p-4 shadow-sm border border-gray-200/50">
+                    <p id="response-${id}" class="text-sm leading-relaxed min-h-[20px]"></p>
+                </div>
+                <div id="sources-${id}" class="hidden mt-2">
+                    <a href="/consultas/ver_referencias/${id}" class="text-[10px] font-bold text-cyan-600 hover:underline">VER FONTES DE DADOS</a>
+                </div>
+            </div>
+        `;
+        return div;
+    }
+
+    function createTypingIndicator() {
+        const div = document.createElement('div');
+        div.id = "typing-indicator";
+        div.className = "flex items-start gap-3 animate-in fade-in duration-300";
+        div.innerHTML = `
+            <img class="size-10 rounded-full opacity-50" src="{% static 'assistente_virtual.png' %}" alt="">
+            <div class="bg-gray-100 rounded-2xl rounded-tl-none px-4 py-3 border border-gray-200/50">
+                <div class="flex gap-1">
+                    <span class="typing-dot size-1.5 bg-gray-400 rounded-full"></span>
+                    <span class="typing-dot size-1.5 bg-gray-400 rounded-full"></span>
+                    <span class="typing-dot size-1.5 bg-gray-400 rounded-full"></span>
+                </div>
+            </div>
+        `;
+        return div;
+    }
+
+    // --- Lógica de Comunicação ---
+
+    formPergunta.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const pergunta = inputPergunta.value.trim();
+        if (!pergunta) return;
+
+        // Reset UI
+        inputPergunta.value = '';
+        inputPergunta.style.height = 'auto';
+        btnEnviar.disabled = true;
+
+        // 1. Adiciona pergunta do usuário
+        chatMessages.appendChild(createUserMessage(pergunta));
+        scrollToBottom();
+
+        try {
+            // 2. Chama o backend para iniciar a pergunta
+            const formData = new FormData();
+            formData.append('pergunta', pergunta);
+            
+            const response = await fetch("{% url 'chat' paciente.id %}", {
+                method: "POST",
+                body: formData
+            });
+
+            if (!response.ok) throw new Error("Erro ao iniciar chat");
+            
+            const data = await response.json();
+            const perguntaId = data.id;
+
+            // 3. Mostra indicador de "IA digitando..."
+            const typingIndicator = createTypingIndicator();
+            chatMessages.appendChild(typingIndicator);
+            scrollToBottom();
+
+            // 4. Inicia Stream
+            const streamResponse = await fetch("{% url 'stream_response' paciente.id %}", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams({ id_pergunta: perguntaId })
+            });
+
+            // Remove o typing indicator e prepara o card de resposta
+            typingIndicator.remove();
+            chatMessages.appendChild(createAIMessage(perguntaId));
+            const responseElement = document.getElementById(`response-${perguntaId}`);
+            const sourcesElement = document.getElementById(`sources-${perguntaId}`);
+
+            const reader = streamResponse.body.getReader();
+            const decoder = new TextDecoder("utf-8");
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value, { stream: true });
+                responseElement.innerText += chunk;
+                scrollToBottom();
+            }
+
+            // Mostra as fontes após terminar o stream
+            sourcesElement.classList.remove('hidden');
+
+        } catch (error) {
+            console.error(error);
+            const errorDiv = document.createElement('div');
+            errorDiv.className = "text-center p-2 text-xs text-red-500 font-medium";
+            errorDiv.innerText = "Ops! Ocorreu um erro ao processar sua pergunta. Tente novamente.";
+            chatMessages.appendChild(errorDiv);
+        } finally {
+            btnEnviar.disabled = false;
+            inputPergunta.focus();
+        }
+    });
+
+
+    // ... (Seletores e Utilitários anteriores permanecem iguais) ...
+
+    // --- Novas Funções de UI ---
+
+    function createWelcomeMessage() {
+        const div = document.createElement('div');
+        // Adicionada animação de fade-in e slide para entrada natural
+        div.className = "flex items-start gap-3 animate-in fade-in slide-in-from-left-4 duration-700 ease-out";
+        div.innerHTML = `
+            <img class="size-10 rounded-full shadow-sm" src="{% static 'assistente_virtual.png' %}" alt="PsiQuete">
+            <div class="flex flex-col gap-1 max-w-[80%] sm:max-w-[70%]">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-bold text-gray-900">PsiQuete</span>
+                    <span class="text-[10px] text-gray-400">${getCurrentTime()}</span>
+                </div>
+                <div class="bg-gray-100 text-gray-800 rounded-2xl rounded-tl-none p-4 shadow-sm border border-gray-200/50">
+                    <p class="text-sm leading-relaxed">Olá! Sou sua assistente virtual. Analisei o histórico do paciente e estou pronta para ajudar com dúvidas ou resumos. Como posso auxiliar hoje?</p>
+                </div>
+            </div>
+        `;
+        return div;
+    }
+
+    async function showInitialAIMessage() {
+        // 1. Mostrar typing indicator imediatamente ao carregar
+        const indicator = createTypingIndicator();
+        chatMessages.appendChild(indicator);
+        scrollToBottom();
+
+        // 2. Simular tempo de "digitação" (1.8 segundos)
+        await new Promise(resolve => setTimeout(resolve, 1800));
+
+        // 3. Remover indicador e inserir mensagem oficial
+        indicator.remove();
+        chatMessages.appendChild(createWelcomeMessage());
+        scrollToBottom();
+    }
+
+    // --- Inicialização ---
+
+    window.addEventListener('DOMContentLoaded', () => {
+        showInitialAIMessage();
+        inputPergunta.focus(); // Foco automático sem borda preta
+    });
+
+    // ... (Lógica de envio 'formPergunta.addEventListener' permanece igual) ...
+</script>
+
+
+{% endblock 'body' %}

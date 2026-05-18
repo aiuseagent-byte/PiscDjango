@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block 'body' %}
+    <div class="relative isolate overflow-hidden bg-white min-h-screen">
+        <svg aria-hidden="true"
+             class="absolute inset-0 -z-10 size-full mask-[radial-gradient(100%_100%_at_top_right,white,transparent)] stroke-gray-200">
+            <defs>
+                <pattern id="grid-pattern" width="200" height="200" x="50%" y="-1" patternUnits="userSpaceOnUse">
+                    <path d="M.5 200V.5H200" fill="none" />
+                </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#grid-pattern)" stroke-width="0" />
+        </svg>
+
+        <div aria-hidden="true" class="absolute top-0 right-0 -z-10 transform-gpu blur-3xl opacity-20">
+            <div style="clip-path: polygon(74% 44%, 100% 61%, 97% 26%, 85% 0%, 46% 2%, 0% 27%, 23% 51%, 58% 83%)"
+                 class="aspect-[1108/632] w-[40rem] bg-gradient-to-tr from-[#80caff] to-[#4f46e5]"></div>
+        </div>
+
+        <div class="max-w-7xl mt-8 mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="border-b border-gray-200 pb-5 sm:flex sm:items-center sm:justify-between">
+                <h3 class="text-xl font-bold text-gray-900 tracking-tight">Pacientes</h3>
+                <div class="mt-3 sm:mt-0 sm:ml-4">
+                    <button data-dialog-target="sign-in-modal"
+                            type="button"
+                            class="inline-flex cursor-pointer items-center rounded-lg bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-cyan-500 transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Novo paciente
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {% for paciente in pacientes %}
+                    <a href="{% url 'consultas' paciente.id %}" class="group flex flex-col bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden transition-all hover:shadow-lg hover:border-cyan-200 md:flex-row md:h-52">
+                        <div class="relative shrink-0 w-full md:w-52 h-52 md:h-full">
+                            <img class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                 src="{{paciente.foto.url}}"
+                                 alt="{{paciente.nome}}">
+                        </div>
+                    
+                        <div class="flex flex-col flex-1 p-6">
+                            <div class="flex-1">
+                                <h5 class="text-xl font-bold text-gray-900 group-hover:text-cyan-600 transition-colors">
+                                    {{paciente.nome}}
+                                </h5>
+                                <p class="mt-2 text-sm text-gray-500 line-clamp-2 leading-relaxed">
+                                    {{paciente.descricao}}
+                                </p>
+                            </div>
+                    
+                            <div class="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <span class="relative flex h-2.5 w-2.5 mr-2">
+                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 {% if paciente.ativo %}bg-green-400{% else %}bg-red-400{% endif %}"></span>
+                                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 {% if paciente.ativo %}bg-green-500{% else %}bg-red-500{% endif %}"></span>
+                                    </span>
+                                    <span class="text-xs font-bold uppercase tracking-wider {% if paciente.ativo %}text-green-600{% else %}text-red-600{% endif %}">
+                                        {% if paciente.ativo %}Ativo{% else %}Inativo{% endif %}
+                                    </span>
+                                </div>
+                                
+                                <div class="flex items-center text-gray-400 text-sm">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                    </svg>
+                                    <span class="font-medium">10</span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div data-dialog-backdrop="sign-in-modal" data-dialog-backdrop-close="true"
+         class="pointer-events-none fixed inset-0 z-[999] grid h-screen w-screen place-items-center bg-slate-900/40 opacity-0 backdrop-blur-sm transition-opacity duration-300">
+        <div data-dialog="sign-in-modal" class="relative mx-auto w-full max-w-[26rem] rounded-2xl overflow-hidden shadow-2xl bg-white">
+            <div class="bg-cyan-800 p-8 text-center">
+                <h3 class="text-2xl font-bold text-white">Novo Paciente</h3>
+                <p class="text-cyan-100 text-sm mt-1">Preencha os dados para cadastro</p>
+            </div>
+            <form action="{% url 'pacientes' %}" method="POST" enctype="multipart/form-data" class="p-8">
+                {% csrf_token %}
+                <div class="space-y-4">
+                    <div>
+                        <label class="block mb-1.5 text-sm font-medium text-gray-700">Foto de Perfil</label>
+                        <input type="file" name="foto" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100 border rounded-lg p-1 w-full border-gray-200" />
+                    </div>
+                    <div>
+                        <label class="block mb-1.5 text-sm font-medium text-gray-700">Nome Completo</label>
+                        <input type="text" name="nome" placeholder="Ex: Zé da Lua" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 outline-none transition-all" />
+                    </div>
+                    <div>
+                        <label class="block mb-1.5 text-sm font-medium text-gray-700">Descrição/Diagnóstico</label>
+                        <textarea name="descricao" rows="3" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 outline-none transition-all resize-none"></textarea>
+                    </div>
+                </div>
+                <button type="submit" class="mt-8 w-full bg-cyan-600 text-white font-bold py-3 rounded-lg hover:bg-cyan-700 shadow-md transition-all">
+                    Finalizar Cadastro
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const openButtons = document.querySelectorAll("[data-dialog-target]");
+            const backdrops = document.querySelectorAll("[data-dialog-backdrop]");
+            
+            openButtons.forEach((btn) => {
+                btn.addEventListener("click", () => {
+                    const target = btn.getAttribute("data-dialog-target");
+                    const backdrop = document.querySelector(`[data-dialog-backdrop="${target}"]`);
+                    if (backdrop) {
+                        backdrop.classList.remove("opacity-0", "pointer-events-none");
+                        backdrop.classList.add("opacity-100", "pointer-events-auto");
+                    }
+                });
+            });
+
+            backdrops.forEach((backdrop) => {
+                backdrop.addEventListener("click", (e) => {
+                    if (backdrop.getAttribute("data-dialog-backdrop-close") === "true" && e.target === backdrop) {
+                        backdrop.classList.add("opacity-0", "pointer-events-none");
+                        backdrop.classList.remove("opacity-100", "pointer-events-auto");
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock 'body' %}
