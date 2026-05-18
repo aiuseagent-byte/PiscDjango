@@ -29,3 +29,4 @@ faiss/
 .claude/
 .agents/
 skills-lock.json
+.files_claude/
