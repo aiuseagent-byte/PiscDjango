@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-python manage.py migrate --noinput &&
-python manage.py collectstatic --noinput &
+set -e
+
+python manage.py migrate --noinput
+python manage.py collectstatic --noinput
 python manage.py qcluster &
 
-gunicorn core.wsgi
+exec gunicorn core.wsgi --bind 0.0.0.0:${PORT:-8000} --workers 2
